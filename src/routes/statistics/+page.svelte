@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
-	import Input from '$lib/components/ui/Input.svelte';
+	import DateSelect from '$lib/components/ui/DateSelect.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -16,12 +16,12 @@
 <Card class="mb-4 p-4">
 	<form method="GET" class="flex flex-wrap items-end gap-3">
 		<div>
-			<label class="mb-1 block text-xs text-ink-500" for="from">开始</label>
-			<Input id="from" name="from" type="date" value={data.from} class="w-40" />
+			<span class="mb-1 block text-xs text-ink-500">开始</span>
+			<DateSelect name="from" value={data.from} />
 		</div>
 		<div>
-			<label class="mb-1 block text-xs text-ink-500" for="to">结束</label>
-			<Input id="to" name="to" type="date" value={data.to} class="w-40" />
+			<span class="mb-1 block text-xs text-ink-500">结束</span>
+			<DateSelect name="to" value={data.to} />
 		</div>
 		<Button type="submit">查询</Button>
 	</form>
