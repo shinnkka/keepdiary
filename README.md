@@ -44,15 +44,16 @@ node build/index.js   # 默认 3000 端口，可用 PORT / DATABASE_PATH 环境�
 
 ## 路由
 
-| 路径               | 说明                                                           |
-| ------------------ | -------------------------------------------------------------- |
-| `/`                | 月历 Dashboard，`?month=YYYY-MM` 切换月份                      |
-| `/diary/[date]`    | 某一天：标题、Markdown 正文、状态多选、图片上传/删除、删除日记 |
-| `/statistics`      | 任意时间范围的状态天数统计 + 日期概览                          |
-| `/settings`        | 设置入口                                                       |
-| `/settings/status` | 状态管理：创建、编辑、改色、排序、删除                         |
-| `/settings/events` | 特殊日期：一次性 / 每年重复                                    |
-| `/images/[id]`     | 读取 `data/images/` 中的图片文件                               |
+| 路径                 | 说明                                                           |
+| -------------------- | -------------------------------------------------------------- |
+| `/`                  | 月历 Dashboard，`?month=YYYY-MM` 切换月份                      |
+| `/diary/[date]`      | 某一天的内容浏览页：标题、状态、Markdown 正文、图片            |
+| `/diary/[date]/edit` | 编辑页：标题、状态多选、Markdown 正文、图片上传/删除、删除日记 |
+| `/statistics`        | 任意时间范围的状态天数统计 + 日期概览                          |
+| `/settings`          | 设置入口                                                       |
+| `/settings/status`   | 状态管理：创建、编辑、改色、排序、删除                         |
+| `/settings/events`   | 特殊日期：一次性 / 每年重复                                    |
+| `/images/[id]`       | 读取 `data/images/` 中的图片文件                               |
 
 ## 目录结构
 

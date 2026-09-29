@@ -2,10 +2,18 @@
 	import type { StatusDTO } from '$lib/types';
 	import { resolve } from '$app/paths';
 
-	let { statuses = [], selected = [] }: { statuses: StatusDTO[]; selected: (number | string)[] } =
-		$props();
+	let {
+		statuses = [],
+		selected = $bindable<number[]>([])
+	}: { statuses: StatusDTO[]; selected: number[] } = $props();
 
-	const selectedIds = $derived(selected.map((id) => Number(id)));
+	function toggle(id: number, checked: boolean) {
+		if (checked) {
+			if (!selected.includes(id)) selected = [...selected, id];
+		} else {
+			selected = selected.filter((value) => value !== id);
+		}
+	}
 </script>
 
 <div class="flex flex-wrap items-center gap-2">
@@ -18,7 +26,8 @@
 				type="checkbox"
 				name="statusIds"
 				value={s.id}
-				checked={selectedIds.includes(s.id)}
+				checked={selected.includes(s.id)}
+				onchange={(event) => toggle(s.id, event.currentTarget.checked)}
 				class="sr-only"
 			/>
 			{s.name}

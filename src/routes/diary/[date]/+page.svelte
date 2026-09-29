@@ -1,21 +1,23 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import Markdown from '$lib/components/diary/Markdown.svelte';
-	import StatusPicker from '$lib/components/status/StatusPicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
-	import Input from '$lib/components/ui/Input.svelte';
-	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import { shiftDate } from '$lib/calendar';
+	import { readableTextColor } from '$lib/utils';
 	import { resolve } from '$app/paths';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	let { data }: PageProps = $props();
 
 	const prevDate = $derived(shiftDate(data.date, -1));
 	const nextDate = $derived(shiftDate(data.date, 1));
-
-	const selectedIds = $derived(data.detail.statuses.map((s) => s.id));
+	const hasStatuses = $derived(data.detail.statuses.length > 0);
+	const isEmpty = $derived(
+		!data.detail.title &&
+			!data.detail.content?.trim() &&
+			!hasStatuses &&
+			data.detail.images.length === 0
+	);
 </script>
 
 <svelte:head><title>{data.date} · Keep Diary</title></svelte:head>
@@ -23,16 +25,16 @@
 <nav class="mb-4 flex items-center justify-between">
 	<div class="flex items-center gap-2">
 		<a href={resolve('/')}><Button variant="ghost" size="sm">← 日历</Button></a>
-		<a href={resolve('/diary/[date]', { date: prevDate })}
-			><Button variant="outline" size="sm">前一天</Button></a
-		>
-		<a href={resolve('/diary/[date]', { date: nextDate })}
-			><Button variant="outline" size="sm">后一天</Button></a
-		>
+		<a href={resolve('/diary/[date]', { date: prevDate })}>
+			<Button variant="outline" size="sm">前一天</Button>
+		</a>
+		<a href={resolve('/diary/[date]', { date: nextDate })}>
+			<Button variant="outline" size="sm">后一天</Button>
+		</a>
 	</div>
-	{#if form?.message}
-		<span class="text-sm text-emerald-600">{form.message}</span>
-	{/if}
+	<a href={resolve('/diary/[date]/edit', { date: data.date })}>
+		<Button size="sm">编辑</Button>
+	</a>
 </nav>
 
 <header class="mb-4">
@@ -43,90 +45,50 @@
 	</p>
 </header>
 
-<div class="grid gap-4 lg:grid-cols-[2fr_1fr]">
-	<Card class="p-4">
-		<form method="POST" action="?/save" use:enhance>
-			<input type="hidden" name="date" value={data.date} />
-
-			<label class="mb-1.5 block text-sm font-medium text-ink-700" for="title">标题</label>
-			<Input id="title" name="title" value={data.detail.title ?? ''} placeholder="给今天起个标题" />
-
-			<div class="mt-4">
-				<p class="mb-1.5 text-sm font-medium text-ink-700">状态</p>
-				<StatusPicker statuses={data.statuses} selected={selectedIds} />
-			</div>
-
-			<div class="mt-4">
-				<div class="mb-1.5 flex items-center justify-between">
-					<label class="text-sm font-medium text-ink-700" for="content">正文</label>
-				</div>
-				<Textarea
-					id="content"
-					name="content"
-					rows={14}
-					value={data.detail.content ?? ''}
-					placeholder="今天……"
-				/>
-			</div>
-
-			<div class="mt-4 flex items-center gap-2">
-				<Button type="submit">保存</Button>
-			</div>
-		</form>
-
-		{#if data.detail.content}
-			<div class="mt-4 border-t border-ink-200 pt-3">
-				<p class="mb-2 text-xs font-medium tracking-wide text-ink-400 uppercase">预览</p>
-				<Markdown content={data.detail.content} />
+{#if isEmpty}
+	<Card class="p-10 text-center">
+		<p class="text-sm text-ink-500">这一天还没有记录。</p>
+		<a href={resolve('/diary/[date]/edit', { date: data.date })} class="mt-4 inline-block">
+			<Button>写点什么</Button>
+		</a>
+	</Card>
+{:else}
+	<Card class="p-5">
+		{#if hasStatuses}
+			<div class="mb-3 flex flex-wrap gap-2">
+				{#each data.detail.statuses as status (status.id)}
+					<span
+						class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+						style="background: {status.color}; color: {readableTextColor(status.color)}"
+					>
+						{status.name}
+					</span>
+				{/each}
 			</div>
 		{/if}
+
+		{#if data.detail.title}
+			<h2 class="mb-3 text-lg font-semibold text-ink-900">{data.detail.title}</h2>
+		{/if}
+
+		<Markdown content={data.detail.content ?? ''} />
 	</Card>
 
-	<div class="space-y-4">
-		<Card class="p-4">
+	{#if data.detail.images.length > 0}
+		<Card class="mt-4 p-4">
 			<h2 class="mb-3 text-sm font-semibold text-ink-700">图片</h2>
-			<form
-				method="POST"
-				action="?/uploadImage"
-				enctype="multipart/form-data"
-				class="mb-3 flex gap-2"
-			>
-				<input type="hidden" name="date" value={data.date} />
-				<input
-					type="file"
-					name="file"
-					accept="image/*"
-					required
-					class="w-full rounded-md border border-ink-300 bg-white p-1.5 text-xs"
-				/>
-				<Button type="submit" size="sm">上传</Button>
-			</form>
-
-			{#if data.detail.images.length === 0}
-				<p class="text-xs text-ink-400">还没有图片</p>
-			{:else}
-				<div class="grid grid-cols-2 gap-2">
-					{#each data.detail.images as img (img.id)}
-						<figure class="group relative overflow-hidden rounded-lg border border-ink-200">
-							<img src={img.url} alt={img.originalFilename} class="h-28 w-full object-cover" />
-							<form method="POST" action="?/deleteImage" class="absolute top-1 right-1">
-								<input type="hidden" name="imageId" value={img.id} />
-								<Button type="submit" variant="danger" size="sm" class="h-6 px-1.5 text-[10px]">
-									删除
-								</Button>
-							</form>
-						</figure>
-					{/each}
-				</div>
-			{/if}
+			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+				{#each data.detail.images as image (image.id)}
+					<figure class="overflow-hidden rounded-lg border border-ink-200">
+						<img
+							src={image.url}
+							alt={image.originalFilename}
+							class="h-36 w-full bg-ink-50 object-cover"
+							loading="lazy"
+						/>
+					</figure>
+				{/each}
+			</div>
 		</Card>
-
-		<Card class="p-4">
-			<h2 class="mb-2 text-sm font-semibold text-ink-700">危险操作</h2>
-			<form method="POST" action="?/delete" use:enhance>
-				<input type="hidden" name="date" value={data.date} />
-				<Button type="submit" variant="danger" size="sm">删除这一天的日记</Button>
-			</form>
-		</Card>
-	</div>
-</div>
+	{/if}
+{/if}
