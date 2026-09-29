@@ -13,8 +13,6 @@
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -- 内容来自用户自己的日记，个人应用内渲染 Markdown -->
 		{@html html}
 	</div>
-{:else}
-	<p class="text-sm text-ink-400">（还没有正文）</p>
 {/if}
 
 <style>
