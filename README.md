@@ -36,11 +36,52 @@ pnpm run dev          # 启动开发服务器 http://localhost:5173
 局域网访问：
 
 ```sh
-pnpm run dev -- --host
-# 或生产部署
-pnpm run build
-node build/index.js   # 默认 3000 端口，可用 PORT / DATABASE_PATH 环境变量覆盖
+pnpm run dev -- --host   # 开发模式 http://<服务器IP>:5173
 ```
+
+## 部署（局域网）
+
+生产运行使用 `@sveltejs/adapter-node`，在服务器上执行：
+
+```sh
+pnpm install                    # 安装依赖（编译 better-sqlite3、内嵌 twemoji）
+pnpm run build                  # 构建，产物在 build/
+HOST=0.0.0.0 PORT=3000 node build/index.js
+```
+
+然后同局域网设备访问 `http://<服务器IP>:3000`。
+
+- **必须在项目根目录运行** `node build/index.js`：应用按当前工作目录解析 `data/diary.db` 与 `drizzle/`；换目录运行会找不到 migration。
+- `HOST` 默认 `0.0.0.0`、`PORT` 默认 `3000`，可用环境变量覆盖。
+- `DATABASE_PATH=/path/to/diary.db` 可自定义数据库位置，图片存到该文件同级的 `images/`。
+- 防火墙放行端口，例如 `sudo ufw allow 3000/tcp`。
+
+长期运行可用 systemd：
+
+```ini
+# /etc/systemd/system/keepdiary.service
+[Unit]
+Description=Keep Diary
+After=network.target
+
+[Service]
+Type=simple
+User=shinka
+WorkingDirectory=/home/shinka/repo/keepdiary
+Environment=HOST=0.0.0.0
+Environment=PORT=3000
+ExecStart=/usr/bin/node build/index.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```sh
+sudo systemctl daemon-reload && sudo systemctl enable --now keepdiary
+```
+
+> **关于 CSRF**：直接以 HTTP + IP 访问时，`adapter-node` 在未配置 `ORIGIN` 时会把协议当作 `https`，导致表单提交报 `Cross-site POST form submissions are forbidden`（开发模式不会）。本项目单用户、局域网、无登录会话，已在 `svelte.config.js` 设置 `csrf.trustedOrigins: ['*']` 以支持直连。若以后接入域名/公网，建议移除该配置并改用 `ORIGIN=http://<host:port>` 启动。
 
 ## 路由
 
