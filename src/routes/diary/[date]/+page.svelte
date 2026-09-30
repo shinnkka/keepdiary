@@ -76,16 +76,27 @@
 
 	{#if data.detail.images.length > 0}
 		<Card class="mt-4 p-4">
-			<h2 class="mb-3 text-sm font-semibold text-ink-700">图片</h2>
+			<h2 class="mb-3 text-sm font-semibold text-ink-700">图片 / 视频</h2>
 			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
 				{#each data.detail.images as image (image.id)}
 					<figure class="overflow-hidden rounded-lg border border-ink-200">
-						<img
-							src={image.url}
-							alt={image.originalFilename}
-							class="h-36 w-full bg-ink-50 object-cover"
-							loading="lazy"
-						/>
+						{#if image.mimeType.startsWith('video/')}
+							<video
+								src={image.url}
+								class="h-36 w-full bg-black object-contain"
+								controls
+								preload="metadata"
+							>
+								<track kind="captions" />
+							</video>
+						{:else}
+							<img
+								src={image.url}
+								alt={image.originalFilename}
+								class="h-36 w-full bg-ink-50 object-cover"
+								loading="lazy"
+							/>
+						{/if}
 					</figure>
 				{/each}
 			</div>

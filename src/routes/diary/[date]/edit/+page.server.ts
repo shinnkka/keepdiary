@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { formatCN, getLunarInfo, isValidDateKey } from '$lib/calendar';
 import { deleteDiary, ensureDiary, getDiaryDetail, saveDiary } from '$lib/server/diary';
-import { deleteImage, isSupportedImage, saveImage } from '$lib/server/images';
+import { deleteImage, isSupportedMedia, saveMedia } from '$lib/server/images';
 import { listStatuses } from '$lib/server/status';
 
 export function load({ params }: { params: { date: string } }) {
@@ -63,26 +63,26 @@ export const actions = {
 			return fail(400, { message: '请选择图片文件' });
 		}
 		const mimeType = file.type || 'application/octet-stream';
-		if (!isSupportedImage(mimeType)) {
-			return fail(400, { message: '只支持图片文件' });
+		if (!isSupportedMedia(mimeType)) {
+			return fail(400, { message: '只支持图片或视频文件' });
 		}
 
 		const diaryRow = ensureDiary(date);
 		const data = Buffer.from(await file.arrayBuffer());
-		saveImage({
+		saveMedia({
 			diaryId: diaryRow.id,
-			originalFilename: file.name || 'image',
+			originalFilename: file.name || 'media',
 			mimeType,
 			data
 		});
-		return { success: true, message: '图片已上传' };
+		return { success: true, message: '已上传' };
 	},
 
 	deleteImage: async ({ request }: { request: Request }) => {
 		const form = await request.formData();
 		const id = Number(form.get('imageId'));
-		if (!Number.isInteger(id) || id <= 0) return fail(400, { message: '无效的图片' });
+		if (!Number.isInteger(id) || id <= 0) return fail(400, { message: '无效的文件' });
 		deleteImage(id);
-		return { success: true, message: '图片已删除' };
+		return { success: true, message: '已删除' };
 	}
 };

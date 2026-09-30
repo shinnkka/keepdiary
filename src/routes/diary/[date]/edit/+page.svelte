@@ -76,7 +76,7 @@
 
 	<div class="space-y-4">
 		<Card class="p-4">
-			<h2 class="mb-3 text-sm font-semibold text-ink-700">图片</h2>
+			<h2 class="mb-3 text-sm font-semibold text-ink-700">图片 / 视频</h2>
 			<form
 				method="POST"
 				action="?/uploadImage"
@@ -88,7 +88,7 @@
 				<input
 					type="file"
 					name="file"
-					accept="image/*"
+					accept="image/*,video/*"
 					required
 					class="w-full rounded-md border border-ink-300 bg-white p-1.5 text-xs"
 				/>
@@ -96,12 +96,27 @@
 			</form>
 
 			{#if data.detail.images.length === 0}
-				<p class="text-xs text-ink-400">还没有图片</p>
+				<p class="text-xs text-ink-400">还没有图片或视频</p>
 			{:else}
 				<div class="grid grid-cols-2 gap-2">
 					{#each data.detail.images as image (image.id)}
 						<figure class="group relative overflow-hidden rounded-lg border border-ink-200">
-							<img src={image.url} alt={image.originalFilename} class="h-28 w-full object-cover" />
+							{#if image.mimeType.startsWith('video/')}
+								<video
+									src={image.url}
+									class="h-28 w-full bg-black object-contain"
+									controls
+									preload="metadata"
+								>
+									<track kind="captions" />
+								</video>
+							{:else}
+								<img
+									src={image.url}
+									alt={image.originalFilename}
+									class="h-28 w-full object-cover"
+								/>
+							{/if}
 							<form
 								method="POST"
 								action="?/deleteImage"

@@ -9,27 +9,35 @@ import { image, type ImageRow } from './db/schema';
 export const imagesDir = join(dataDir, 'images');
 
 const EXT_BY_MIME: Record<string, string> = {
+	// 图片
 	'image/jpeg': 'jpg',
 	'image/png': 'png',
 	'image/webp': 'webp',
 	'image/gif': 'gif',
 	'image/avif': 'avif',
-	'image/svg+xml': 'svg'
+	'image/svg+xml': 'svg',
+	// 视频
+	'video/mp4': 'mp4',
+	'video/webm': 'webm',
+	'video/quicktime': 'mov',
+	'video/x-matroska': 'mkv',
+	'video/ogg': 'ogv'
 };
 
-export function isSupportedImage(mimeType: string): boolean {
-	return mimeType.startsWith('image/');
+/** 允许上传的媒体：图片与视频。 */
+export function isSupportedMedia(mimeType: string): boolean {
+	return mimeType.startsWith('image/') || mimeType.startsWith('video/');
 }
 
-export interface NewImage {
+export interface NewMedia {
 	diaryId: number;
 	originalFilename: string;
 	mimeType: string;
 	data: Buffer;
 }
 
-/** 保存图片文件到 data/images/YYYY/MM/，并在数据库写入 metadata。 */
-export function saveImage(input: NewImage): ImageRow {
+/** 保存图片/视频文件到 data/images/YYYY/MM/，并在数据库写入 metadata。 */
+export function saveMedia(input: NewMedia): ImageRow {
 	const now = new Date();
 	const year = String(now.getFullYear());
 	const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -43,12 +51,14 @@ export function saveImage(input: NewImage): ImageRow {
 
 	let width: number | null = null;
 	let height: number | null = null;
-	try {
-		const dims = imageSize(input.data);
-		width = dims.width ?? null;
-		height = dims.height ?? null;
-	} catch {
-		// 无法解析尺寸时忽略（例如 svg）
+	if (input.mimeType.startsWith('image/')) {
+		try {
+			const dims = imageSize(input.data);
+			width = dims.width ?? null;
+			height = dims.height ?? null;
+		} catch {
+			// 无法解析尺寸时忽略（例如 svg）
+		}
 	}
 
 	return db
